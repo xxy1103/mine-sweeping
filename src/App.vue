@@ -14,6 +14,7 @@
         </tr>
     </table>
 </p>
+<p class="markCount">marked: {{ marked }}</p>
 <p class="result">{{ result }}</p>
 <button class="button" v-on:click="reset" align="center">重开一把</button>
 </template>
@@ -23,16 +24,24 @@ const result = ref('');
 const row = 10;
 const col = 10;
 const mine = 10;
+const marked = ref(0);
 const hidemap = ref(Array.from(Array(row+2),() => Array(col+2).fill(0)))
 const visibleMap = ref(Array.from(Array(row+2),() => Array(col+2).fill(false)))
 const vmap = ref(Array.from(Array(row+2),() => Array(col+2).fill(0)))
 initialise();
 function mark(rowsIndex:any,colsIndex:any)
 {
+    
     if(visibleMap.value[rowsIndex][colsIndex] !== 'mark')
+    {
         visibleMap.value[rowsIndex][colsIndex] = 'mark';
+        marked.value++;
+    }
     else
+    {
         visibleMap.value[rowsIndex][colsIndex] = false;
+        marked.value--;
+    }
 }
 function mineJudge(i:any,j:any)
 {
@@ -62,25 +71,35 @@ function isVisible(rowsIndex:any,colsIndex:any)
 }
 function open(rowsIndex:any,colsIndex:any)
 {
+    if(vmap.value[rowsIndex][colsIndex] !==' ')
+        return ;
     if(rowsIndex>=1 && rowsIndex <=row && colsIndex >=1 && colsIndex <=col )
     {
-        if(vmap.value[rowsIndex+1][colsIndex] === ' ' && visibleMap.value[rowsIndex+1][colsIndex] != true)
+        if(visibleMap.value[rowsIndex+1][colsIndex] != true)
         {
+            if(visibleMap.value[rowsIndex+1][colsIndex] === 'mark')
+                marked.value--;
             visibleMap.value[rowsIndex+1][colsIndex] = true;
             open(rowsIndex+1,colsIndex);
         }
-        if(vmap.value[rowsIndex][colsIndex+1] === ' ' && visibleMap.value[rowsIndex][colsIndex+1] != true)
+        if(visibleMap.value[rowsIndex][colsIndex+1] != true)
         {
+            if(visibleMap.value[rowsIndex][colsIndex+1] === 'mark')
+                marked.value--;
             visibleMap.value[rowsIndex][colsIndex+1] = true;
             open(rowsIndex,colsIndex+1);
         }
-        if(vmap.value[rowsIndex][colsIndex-1] === ' ' && visibleMap.value[rowsIndex][colsIndex-1] != true)
+        if(visibleMap.value[rowsIndex][colsIndex-1] != true)
         {
+            if(visibleMap.value[rowsIndex][colsIndex-1] === 'mark')
+                marked.value--;
             visibleMap.value[rowsIndex][colsIndex-1] = true;
             open(rowsIndex,colsIndex-1);
         }
-        if(vmap.value[rowsIndex-1][colsIndex] === ' ' && visibleMap.value[rowsIndex-1][colsIndex] != true)
+        if(visibleMap.value[rowsIndex-1][colsIndex] != true)
         {
+            if(visibleMap.value[rowsIndex-1][colsIndex] === 'mark')
+                marked.value--;
             visibleMap.value[rowsIndex-1][colsIndex] = true;
             open(rowsIndex-1,colsIndex);
         }
@@ -89,6 +108,8 @@ function open(rowsIndex:any,colsIndex:any)
 }
 function toggleVisibility(rowsIndex:any,colsIndex:any)
 {
+    if(visibleMap.value[rowsIndex][colsIndex] === 'mark')
+        marked.value--;
     visibleMap.value[rowsIndex][colsIndex] = true;
     if(vmap.value[rowsIndex][colsIndex] === ' ')
         open(rowsIndex,colsIndex);
@@ -105,9 +126,9 @@ function judgeWin()
     {
         for(let j = 1;j<=col;j++)
         {
-            if(visibleMap.value[i][j] === false)
+            if(visibleMap.value[i][j] === false || visibleMap.value[i][j] === 'mark')
             {
-                    mineCount++;
+                mineCount++;
             }
         }
     }
@@ -119,7 +140,8 @@ function judgeWin()
 
 function initialise()
 {
-    let lmine = 0
+    let lmine = 0;
+    marked.value = 0;
     let now = new Date();
     result.value = '';
     for(let i = 1;i<=row;i++)
